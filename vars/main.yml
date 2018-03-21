@@ -1,0 +1,14 @@
+---
+# vars file for zookeeper
+zookeeper_user: zookeeper
+zookeeper_group: zookeeper
+zookeeper_name : 'zookeeper-{{zookeeper_ver}}'
+zookeeper_tgz : '{{zookeeper_name}}.tar.gz'
+zookeeper_tgz_url : '{{zookeeper_mirror}}/{{zookeeper_name}}/{{zookeeper_tgz}}'
+zookeeper_checksum: '{{kafka_checksums[kafka_ver][kafka_scala_ver]}}'
+
+zookeeper_install_dir: '{{zookeeper_install_parent_dir}}/{{zookeeper_ver}}'
+zookeeper_install_link_dir: '{{zookeeper_install_parent_dir}}/zookeeper'
+zookeeper_data_dir: /var/lib/zookeeper
+zookeeper_properties: /etc/zookeeper
+zookeeper_services: /etc/systemd/system

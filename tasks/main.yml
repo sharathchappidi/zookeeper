@@ -1,0 +1,82 @@
+---
+# tasks file for zookeeper
+
+- name: Check if zookeeper user exists
+  command: id {{zookeeper_user}}
+  register: id_result
+  ignore_errors: True
+  changed_when: False
+
+- name: Create zookeeper user
+  sudo: True
+  user:
+    name: "{{zookeepr_user}}"
+    comment: "Service user for zookeeper"
+    shell: /bin/false 
+  when: id_result|failed
+
+- name: 'check for zookeeper installation..{{zookeeper_install_dir}}'
+  become: yes
+  stat:
+    path: '{{zookeeper_install_dir}}'
+  changed_when: false
+  register: zookeeper_binary
+- when: not zookeeper_binary.stat.exists
+  block:
+    - name: 'ensure {{zookeeper_install_parent_dir}} exists'
+      become: yes
+      become_user: root
+      file:
+        path: '{{item}}'
+        state: directory
+        owner: '{{zookeeper_user}}'
+        group: '{{zookeeper_group}}'
+        mode: '0755'
+      with_items: 
+        - '{{zookeeper_install_dir}}'
+        - '{{zookeeper_properties}}'
+        - '{{zookeeper_data_dir}}'
+    - name:  
+      become: yes
+      become_user: root
+      get_url:
+        url: '{{zookeeper_tgz_url}}'
+        dest: /tmp/{{zookeeper_tgz}}
+        mode: '0644'
+        owner: '{{zookeeper_user}}'
+        group: '{{zookeeper_group}}'
+        timeout: '{{zookeeper_download_timeout_seconds}}'
+#        checksum: '{{zookeeper_checksum}}'
+
+    - name: unarchive...
+      become: yes
+      become_user: root
+      unarchive:
+        remote_src: yes
+        src: /tmp/{{zookeeper_tgz}}
+        dest: '{{zookeeper_install_dir}}'
+        owner: '{{zookeeper_user}}'
+        group: '{{zookeeper_group}}'
+#        creates: '{{zookeeper_install_dir}}'
+  always:
+    - name: delete archive...
+      become: yes
+      become_user: root
+      file:
+        path: /tmp/{{zookeeper_tgz}}
+        state: absent
+
+    - name: link..
+      shell: ln -s '{{zookeeper_install_dir}}' '{{zookeeper_install_parent_dir}}/current'
+      owner: '{{zookeeper_user}}'
+#      group: '{{zookeeper_group}}'
+
+    - template:
+        src: '{{item.src}}'
+        dest: '{{item.dest}}'
+        owner: '{{item.user}}'
+        group: '{{item.group}}'
+      with_items:
+        - { src: 'log4j.properties.j2', dest: '{{zookeeper_properties}}/log4j.properties', user: '{{zookeeper_user}}', group: '{{zookeeper_group}}' }
+        - { src: 'zoo.properties.j2', dest: '{{zookeeper_properties}}/zoo.properties', user: '{{zookeeper_user}}', group: '{{zookeeper_group}}' }
+        - { src: 'zookeeper.service.j2', dest: '{{zookeeper_services}}/zookeeper.service', user: root, group: root }   

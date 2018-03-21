@@ -1,0 +1,8 @@
+---
+# defaults file for zookeeper
+zookeeper_download_timeout_seconds: 600
+zookeeper_install_parent_dir: /srv/zookeeper
+
+zookeeper_mirror : http://apache.mirrors.hoobly.com/zookeeper/
+kafka_scala_ver : '2.12'
+zookeeper_ver : 3.4.10
